@@ -27,7 +27,7 @@ func SetDebug(d bool) {
 }
 
 // Get metadata from metadata server
-func Get(metadata string, c Config) (interface{}, error) {
+func Get(metadata string, c *Config) (interface{}, error) {
 	var value interface{}
 	var result []byte
 	client := &http.Client{}
