@@ -1,7 +1,6 @@
 package metadata
 
 import (
-	"encoding/json"
 	"errors"
 	"io/ioutil"
 	"net/http"
@@ -27,9 +26,7 @@ func SetDebug(d bool) {
 }
 
 // Get metadata from metadata server
-func Get(metadata string, c *Config) (interface{}, error) {
-	var value interface{}
-	var result []byte
+func Get(metadata string, c *Config) ([]byte, error) {
 	client := &http.Client{}
 	server := c.Server + "/" + metadata
 	req, err := http.NewRequest("GET", server, nil)
@@ -37,7 +34,7 @@ func Get(metadata string, c *Config) (interface{}, error) {
 		if debug {
 			panic("Couldn't perform GET request to " + server)
 		}
-		return "", errors.New("error creating get request to " + server)
+		return nil, errors.New("Error creating get request to " + server)
 	}
 	req.Header.Add(c.VerifyHeader, c.VerifyValue)
 	resp, err := client.Do(req)
@@ -45,31 +42,24 @@ func Get(metadata string, c *Config) (interface{}, error) {
 		if debug {
 			panic("Couldn't perform GET request to " + server)
 		}
-		return "", errors.New("couldn't perform GET request to " + server)
+		return nil, errors.New("Couldn't perform GET request to " + server)
 	}
 	defer resp.Body.Close()
 
+	var body []byte
 	if resp.StatusCode == http.StatusOK {
-		bodyBytes, err := ioutil.ReadAll(resp.Body)
+		body, err = ioutil.ReadAll(resp.Body)
 		if err != nil {
 			if debug {
 				panic("Couldn't read response from " + server)
 			}
-			return "", errors.New("Couldn't read response from " + server)
+			return nil, errors.New("Couldn't read response from " + server)
 		}
-		result = bodyBytes
 	} else {
 		if debug {
 			panic("No StatusOK response from " + server)
 		}
-		return "", errors.New("No StatusOK response from " + server)
+		return nil, errors.New("No StatusOK response from " + server)
 	}
-	err = json.Unmarshal(result, &value)
-	if err != nil {
-		if debug {
-			panic("JSON Decode Error")
-		}
-		return "", err
-	}
-	return value, nil
+	return body, nil
 }
