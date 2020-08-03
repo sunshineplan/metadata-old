@@ -17,14 +17,19 @@ type Config struct {
 }
 
 // Get metadata from metadata server
-func Get(metadata string, c *Config) ([]byte, error) {
+func (c *Config) Get(metadata string) ([]byte, error) {
+	return c.GetWithClient(metadata, &http.Client{Transport: &http.Transport{Proxy: nil}})
+}
+
+// GetWithClient metadata from metadata server with custom http.Client
+func (c *Config) GetWithClient(metadata string, client *http.Client) ([]byte, error) {
 	server := c.Server + "/" + metadata
 	req, err := http.NewRequest("GET", server, nil)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to make request to %s: %v", server, err)
 	}
 	req.Header.Add(c.VerifyHeader, c.VerifyValue)
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to do request to %s: %v", server, err)
 	}
